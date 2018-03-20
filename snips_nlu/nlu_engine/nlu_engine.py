@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
-from builtins import str
+import logging
 from copy import deepcopy
+from datetime import datetime
 
+from builtins import str
 from future.utils import iteritems
 
 from snips_nlu.builtin_entities import is_builtin_entity
@@ -14,8 +16,10 @@ from snips_nlu.pipeline.configs import NLUEngineConfig
 from snips_nlu.pipeline.processing_unit import (
     ProcessingUnit, build_processing_unit, load_processing_unit)
 from snips_nlu.result import empty_result, is_empty, parsing_result
-from snips_nlu.utils import get_slot_name_mappings, NotTrained
+from snips_nlu.utils import get_slot_name_mappings, NotTrained, elapsed_since
 from snips_nlu.version import __model_version__, __version__
+
+logger = logging.getLogger(__name__)
 
 
 class SnipsNLUEngine(ProcessingUnit):
@@ -67,6 +71,8 @@ class SnipsNLUEngine(ProcessingUnit):
         Returns:
             The same object, trained.
         """
+        start = datetime.now()
+        logger.info("Fitting NLU engine...")
         dataset = validate_and_format_dataset(dataset)
         self._dataset_metadata = _get_dataset_metadata(dataset)
 
@@ -85,6 +91,7 @@ class SnipsNLUEngine(ProcessingUnit):
             parsers.append(recycled_parser)
 
         self.intent_parsers = parsers
+        logger.debug("Fitted NLU engine in {}".format(elapsed_since(start)))
         return self
 
     def parse(self, text, intents=None):
@@ -104,7 +111,7 @@ class SnipsNLUEngine(ProcessingUnit):
             NotTrained: When the nlu engine is not fitted
             TypeError: When input type is not unicode
         """
-
+        logging.info("Parsing: '{}'...".format(text))
         if not isinstance(text, str):
             raise TypeError("Expected unicode but received: %s" % type(text))
 
@@ -114,6 +121,7 @@ class SnipsNLUEngine(ProcessingUnit):
         if isinstance(intents, str):
             intents = [intents]
 
+        start = datetime.now()
         language = self._dataset_metadata["language_code"]
         entities = self._dataset_metadata["entities"]
 
@@ -128,6 +136,7 @@ class SnipsNLUEngine(ProcessingUnit):
                                            scope)
             return parsing_result(text, intent=res[RES_INTENT],
                                   slots=resolved_slots)
+        logging.debug("Parsed query in {}".format(elapsed_since(start)))
         return empty_result(text)
 
     def to_dict(self):
