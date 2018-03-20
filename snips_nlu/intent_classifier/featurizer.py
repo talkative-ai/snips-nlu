@@ -3,12 +3,10 @@ from __future__ import unicode_literals
 
 from collections import defaultdict
 
-
-
-from builtins import object, range
-from future.utils import iteritems
 import numpy as np
 import scipy.sparse as sp
+from builtins import object, range
+from future.utils import iteritems
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
 from sklearn.feature_selection import chi2
 from snips_nlu_utils import normalize
@@ -69,8 +67,8 @@ class Featurizer(object):
         X_train_tfidf = self.tfidf_vectorizer.fit_transform(
             preprocessed_queries)
         # pylint: enable=C0103
-        list_index_words = {self.tfidf_vectorizer.vocabulary_[x]: x for x in
-                            self.tfidf_vectorizer.vocabulary_}
+        features_idx = {self.tfidf_vectorizer.vocabulary_[x]: x for x in
+                        self.tfidf_vectorizer.vocabulary_}
 
         stop_words = get_stop_words(self.language)
 
@@ -83,7 +81,7 @@ class Featurizer(object):
 
         feature_names = {}
         for i in self.best_features:
-            feature_names[i] = {'word': list_index_words[i], 'pval': pval[i]}
+            feature_names[i] = {'word': features_idx[i], 'pval': pval[i]}
 
         for feat in feature_names:
             if feature_names[feat]['word'] in stop_words:
