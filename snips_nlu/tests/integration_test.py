@@ -1,7 +1,5 @@
 # coding=utf-8
-from __future__ import unicode_literals, print_function
-
-import unittest
+from __future__ import unicode_literals
 
 from future.utils import iteritems
 from snips_nlu_metrics import (compute_cross_val_metrics,
